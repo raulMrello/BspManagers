@@ -10,6 +10,11 @@ de los eventos de los drivers en un contexto de tarea (fuera de las ISRs)
 ## Changelog
 
 ----------------------------------------------------------------------------------------------
+##### 06.11.2017 ->commit:"Actualizo RelayManager"
+- [x] Actualizo RelayManager con funcionalidad simplificada. FALTA VERIFICAR FUNCIONAMIENTO. 
+	
+
+----------------------------------------------------------------------------------------------
 ##### 02.11.2017 ->commit:"Incluyo managers por defecto"
 - [x] Incluyo los drivers que ya tengo hechos, que son:
 	* TouchManager: Gestor que implementa la parte de alto nivel del driver MPR121_CapTouch I2C
