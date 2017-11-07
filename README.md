@@ -10,6 +10,12 @@ de los eventos de los drivers en un contexto de tarea (fuera de las ISRs)
 ## Changelog
 
 ----------------------------------------------------------------------------------------------
+##### 07.11.2017 ->commit:"Quito ConsoleManager"
+- [x] Quito ConsoleManager porque tiene la misma funcionalidad que /Middleware/MQSerialBridge y
+	  además no estaba probado.
+	
+
+----------------------------------------------------------------------------------------------
 ##### 06.11.2017 ->commit:"Actualizo RelayManager"
 - [x] Actualizo RelayManager con funcionalidad simplificada. FALTA VERIFICAR FUNCIONAMIENTO. 
 	
