@@ -10,6 +10,11 @@ de los eventos de los drivers en un contexto de tarea (fuera de las ISRs)
 ## Changelog
 
 ----------------------------------------------------------------------------------------------
+##### 13.11.2017 ->commit:"Añado ServoManager"
+- [x] Añado ServoManager.
+	
+
+----------------------------------------------------------------------------------------------
 ##### 07.11.2017 ->commit:"Quito ConsoleManager"
 - [x] Quito ConsoleManager porque tiene la misma funcionalidad que /Middleware/MQSerialBridge y
 	  además no estaba probado.
