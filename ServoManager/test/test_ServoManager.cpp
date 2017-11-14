@@ -67,7 +67,7 @@ void test_ServoManager(){
     // establezco rangos de funcionamiento
     DEBUG_TRACE("\r\nAjustando rangos... ");
     for(uint8_t i=0;i<SERVO_COUNT;i++){
-        if(servoman->setServoRanges(i, 0, 180, 1000, 2000) != PCA9685_ServoDrv::Success){
+        if(servoman->setServoRanges(i, 0, 120, 180, 480) != PCA9685_ServoDrv::Success){
             DEBUG_TRACE("ERR_servo_%d\r\n...", i);
         }            
     }
@@ -90,10 +90,14 @@ void test_ServoManager(){
     
     // --------------------------------------
     // Arranca el test
-    DEBUG_TRACE("\r\n...INICIO DEL TEST...\r\n");    
-    DEBUG_TRACE("\r\nComandos MQTT disponibles:");    
-    DEBUG_TRACE("\r\n- Mover servoX Dº:      breathe/cmd/servo X,DEG");    
-    DEBUG_TRACE("\r\n- Respiracion servos:   breathe/cmd/move Tus,Nstep,SrvOrg,StDif");    
+    DEBUG_TRACE("\r\n...................INICIO DEL TEST.........................\r\n");    
+    DEBUG_TRACE("\r\n- Mover servo a grados: breathe/cmd/servo S,G");    
+    DEBUG_TRACE("\r\n- Mover servo a duty:   breathe/cmd/duty S,D");    
+    DEBUG_TRACE("\r\n- Iniciar trayectoria:  breathe/cmd/move/start T,N,S,D,Ai,Af");    
+    DEBUG_TRACE("\r\n- Detener trayectoria:  breathe/cmd/move/stop 0");    
+    DEBUG_TRACE("\r\n- Obtener info servo:   breathe/cmd/info S");    
+    DEBUG_TRACE("\r\n- Calibrar servo:       breathe/cmd/cal S,Ai,Af,Di,Df");    
+    DEBUG_TRACE("\r\n- Leer servo del chip:  breathe/cmd/read S\r\n");    
     
 }
 

@@ -10,16 +10,27 @@
  *  El uso de este manager a más alto nivel puede ser, mediante la librería MQLib, mediante la instalación de los topics
  *  de publicación correspondientes y/o por medio de callbacks dedicadas.
  *
- *  Los topics en los que escucha este módulo son los siguientes:
- 
+ *  Los topics en los que escucha este módulo son los siguientes: 
  *
- *  ${pub_topic}/cmd/servo X,Ang
- *      Mueve el servo X al ángulo Ang
+ *  ${pub_topic}/cmd/servo S,A
+ *      Mueve el servo S al ángulo A (limitado por rangos min,max)
  *
- *  ${pub_topic}/cmd/move StepTimeUs,NumSteps,ServoOrigin,StepDif
+ *  ${pub_topic}/cmd/duty S,D
+ *      Mueve el servo S al duty D (sin limitación por rango)
+ *
+ *  ${pub_topic}/cmd/move/start StepTimeUs,NumSteps,ServoOrigin,StepDif,AngIni,AngEnd
  *      Genera un patrón de movimiento senoidal(-1,1,-1) con una cadencia de paso StepTimeUs a completar en NumSteps pasos y 
  *      centrado en el servo ServoOrigin. Los servos adyacentes replican el movimiento variando StepDif pasos del servo
  *      origen.
+ *
+ *  ${pub_topic}/cmd/move/stop 0
+ *      Detiene el patrón de movimiento
+ *
+ *  ${pub_topic}/cmd/info S
+ *      Obtiene información sobre el servo S
+ *
+ *  ${pub_topic}/cmd/cal S,Ai,Af,Di,Df
+ *      Calibra los rangos del servo S, con ángulo minmax Ai,Af y duty minmax Di,Df.
  */
  
 #ifndef __ServoManager__H

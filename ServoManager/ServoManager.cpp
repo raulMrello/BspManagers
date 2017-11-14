@@ -161,17 +161,19 @@ void ServoManager::subscriptionCb(const char* name, void* msg, uint16_t msg_len)
             uint8_t srvorig = atoi(arg);
             arg = strtok(NULL, ",");
             uint8_t stepdif = atoi(arg);
+            arg = strtok(NULL, ",");
+            uint8_t ang_min = atoi(arg);
+            arg = strtok(NULL, ",");
+            uint8_t ang_max = atoi(arg);
             Heap::memFree(data);
             
-            // obtiene el número de pasos y se añadirá un paso extra en cada extremo del movimiento
+            // obtiene el número de pasos
             uint16_t* duties = (uint16_t*)Heap::memAlloc(num_steps * sizeof(uint16_t));            
-            
             if(duties){
-                float deg = 360.0f/num_steps;
-                float accdeg = 0;
+                float rad_inc = (((360.0f/num_steps) * 3.14159265f) / 180);
                 for(int i=0; i<num_steps;i++){
-                    uint8_t angle = (uint8_t)(((PCA9685_ServoDrv::MaxAngleValue - PCA9685_ServoDrv::MinAngleValue)*((1.0f + sinf(270.0f + ((accdeg * 3.14159265f) / 360)))/2)) + PCA9685_ServoDrv::MinAngleValue);
-                    accdeg += deg;
+                    float value = sinf((i * rad_inc));
+                    uint8_t angle = (uint8_t)((((ang_max - ang_min)/2) * value) + (ang_max - ang_min)/2);
                     duties[i] = PCA9685_ServoDrv::getDutyFromAngle(srvorig, angle);                    
                 }
                 startMovement(duties, num_steps, tstep, srvorig, stepdif);
@@ -199,4 +201,91 @@ void ServoManager::subscriptionCb(const char* name, void* msg, uint16_t msg_len)
         }
         return;
     }    
+
+    // si es un comando para mover un único servo
+    if(strstr(name, "/cmd/duty") != 0){
+        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", name, msg);
+        // obtengo los parámetros del mensaje ServoID,Duty
+        char* data = (char*)Heap::memAlloc(msg_len);
+        if(data){
+            strcpy(data, (char*)msg);
+            char* arg = strtok(data, ",");
+            uint8_t servo = atoi(arg);
+            arg = strtok(NULL, ",");
+            uint16_t duty = atoi(arg);
+            Heap::memFree(data);
+            
+            // mueve el servo
+            PCA9685_ServoDrv::setServoDuty(servo, duty, true);                       
+        }
+        return;
+    }  
+
+    // si es un comando para mover un único servo
+    if(strstr(name, "/cmd/info") != 0){
+        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", name, msg);
+        // obtengo los parámetros del mensaje ServoID,Duty
+        char* data = (char*)Heap::memAlloc(msg_len);
+        if(data){
+            strcpy(data, (char*)msg);
+            char* arg = strtok(data, ",");
+            uint8_t servo = atoi(arg);
+            Heap::memFree(data);
+            
+            // mueve el servo
+            uint8_t angle = PCA9685_ServoDrv::getServoAngle(servo);                       
+            uint16_t duty = PCA9685_ServoDrv::getServoDuty(servo);          
+            DEBUG_TRACE("\r\nServoManager: Servo %d: ang=%d, duty=%d\r\n", servo, angle, duty); 
+        }
+        return;
+    }            
+
+    // si es un comando para leer el duty del servo del chip i2c
+    if(strstr(name, "/cmd/read") != 0){
+        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", name, msg);
+        // obtengo los parámetros del mensaje ServoID,Duty
+        char* data = (char*)Heap::memAlloc(msg_len);
+        if(data){
+            strcpy(data, (char*)msg);
+            char* arg = strtok(data, ",");
+            uint8_t servo = atoi(arg);
+            Heap::memFree(data);
+            
+            // mueve el servo
+            uint16_t duty;    
+            if(PCA9685_ServoDrv::readServoDuty(servo, &duty) == PCA9685_ServoDrv::Success){
+                uint8_t angle = PCA9685_ServoDrv::getAngleFromDuty(servo, duty);                                   
+                DEBUG_TRACE("\r\nServoManager: Servo %d: ang=%d, duty=%d\r\n", servo, angle, duty);                 
+            }
+            else{
+                DEBUG_TRACE("\r\nServoManager: ERR_READ Servo %d\r\n", servo); 
+            }
+        }
+        return;
+    }              
+
+    // si es un comando para calibrar el servo
+    if(strstr(name, "/cmd/cal") != 0){
+        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", name, msg);
+        // obtengo los parámetros del mensaje ServoID,Duty
+        char* data = (char*)Heap::memAlloc(msg_len);
+        if(data){
+            strcpy(data, (char*)msg);
+            char* arg = strtok(data, ",");
+            uint8_t servo = atoi(arg);
+            arg = strtok(NULL, ",");
+            uint8_t ang_min = atoi(arg);
+            arg = strtok(NULL, ",");
+            uint8_t ang_max = atoi(arg);
+            arg = strtok(NULL, ",");
+            uint16_t d_min = atoi(arg);
+            arg = strtok(NULL, ",");
+            uint16_t d_max = atoi(arg);
+            Heap::memFree(data);
+            
+            // calibra el servo
+            PCA9685_ServoDrv::setServoRanges(servo, ang_min, ang_max, d_min, d_max);
+        }
+        return;
+    }                  
 }
