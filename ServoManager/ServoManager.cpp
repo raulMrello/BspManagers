@@ -31,7 +31,7 @@ ServoManager::ServoManager(PinName sda, PinName scl, uint8_t num_servos) : PCA96
     for(uint8_t i=0; i<PCA9685_ServoDrv::ServoCount; i++){
         _move_step[i] = NULL;
     }
-                
+                    
     // Carga callbacks estáticas de publicación/suscripción    
     _subscrCb = callback(this, &ServoManager::subscriptionCb);   
     
@@ -98,6 +98,47 @@ void ServoManager::setSubscriptionBase(const char* sub_topic) {
      
 }   
 
+
+//------------------------------------------------------------------------------------
+int ServoManager::setNVData(void* data) {
+    NVData_t* nvdata = (NVData_t*)data;
+    DEBUG_TRACE("\r\nServoManager: Chequeando NVData...");
+    uint32_t crc = 0;
+    for(uint8_t i=0; i<PCA9685_ServoDrv::ServoCount; i++){
+        crc ^= nvdata->minAngle[i];
+        crc ^= nvdata->maxAngle[i];
+        crc ^= nvdata->minDuty[i];
+        crc ^= nvdata->maxDuty[i];
+    }
+    if(crc == nvdata->crc32 && crc != MBED_FLASH_INVALID_SIZE){
+        DEBUG_TRACE("OK!\r\nServoManager: Actualizando NVData...");
+        for(uint8_t i=0; i<PCA9685_ServoDrv::ServoCount; i++){
+            PCA9685_ServoDrv::setServoRanges(i, nvdata->minAngle[i], nvdata->maxAngle[i], nvdata->minDuty[i], nvdata->maxDuty[i]);
+        }    
+        DEBUG_TRACE("OK!\r\n");
+        return 0;
+    }
+    DEBUG_TRACE("ERROR\r\n");
+    return -1;
+}
+
+
+//------------------------------------------------------------------------------------
+void ServoManager::getNVData(uint32_t* data) {    
+    NVData_t* nvdata = (NVData_t*)data;
+    DEBUG_TRACE("\r\nServoManager: Leyendo NVData...");
+    uint32_t crc = 0;
+    for(uint8_t i=0; i<PCA9685_ServoDrv::ServoCount; i++){
+        PCA9685_ServoDrv::getServoRanges(i, &nvdata->minAngle[i], &nvdata->maxAngle[i], &nvdata->minDuty[i], &nvdata->maxDuty[i]);
+        crc ^= nvdata->minAngle[i];
+        crc ^= nvdata->maxAngle[i];
+        crc ^= nvdata->minDuty[i];
+        crc ^= nvdata->maxDuty[i];
+    }  
+    nvdata->crc32 = crc;
+    DEBUG_TRACE("OK!\r\n");
+}    
+    
 //------------------------------------------------------------------------------------
 //- PROTECTED CLASS IMPL. ------------------------------------------------------------
 //------------------------------------------------------------------------------------
@@ -234,8 +275,11 @@ void ServoManager::subscriptionCb(const char* name, void* msg, uint16_t msg_len)
             
             // mueve el servo
             uint8_t angle = PCA9685_ServoDrv::getServoAngle(servo);                       
-            uint16_t duty = PCA9685_ServoDrv::getServoDuty(servo);          
-            DEBUG_TRACE("\r\nServoManager: Servo %d: ang=%d, duty=%d\r\n", servo, angle, duty); 
+            uint16_t duty = PCA9685_ServoDrv::getServoDuty(servo);
+            int16_t min_ang, max_ang;
+            uint16_t min_duty, max_duty;
+            PCA9685_ServoDrv::getServoRanges(servo, &min_ang, &max_ang, &min_duty, &max_duty);             
+            DEBUG_TRACE("\r\nServoManager: Servo %d: ang=%d (%d,%d), duty=%d (%d,%d)\r\n", servo, angle, min_ang, max_ang, duty, min_duty, max_duty); 
         }
         return;
     }            
@@ -288,4 +332,24 @@ void ServoManager::subscriptionCb(const char* name, void* msg, uint16_t msg_len)
         }
         return;
     }                  
+
+    // si es un comando para guardar la calibración de los servos
+    if(strstr(name, "/cmd/save") != 0){
+        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", name, msg);
+        // obtengo los datos de calibración y los actualizo
+        uint32_t* caldata = (uint32_t*)Heap::memAlloc(NVFlash::getPageSize());
+        if(caldata){
+            NVFlash::readPage(0, caldata);
+            getNVData(caldata);
+            NVFlash::erasePage(0);
+            if(NVFlash::writePage(0, caldata) == NVFlash::Success){
+                DEBUG_TRACE("\r\nGuardados datos de calibración\r\n");               
+            }
+            else{
+                DEBUG_TRACE("\r\nERROR guardando datos de calibración\r\n");
+            }
+            Heap::memFree(caldata);
+        }
+        return;
+    }                      
 }

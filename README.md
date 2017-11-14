@@ -10,6 +10,11 @@ de los eventos de los drivers en un contexto de tarea (fuera de las ISRs)
 ## Changelog
 
 ----------------------------------------------------------------------------------------------
+##### 14.11.2017 ->commit:"Incluyo opciones de backup en ServoManager"
+- [x] Añado topics para funcinalidades extra, como backup
+	
+
+----------------------------------------------------------------------------------------------
 ##### 14.11.2017 ->commit:"Añado funcionalidades ServoManager"
 - [x] Añado topics para funcinalidades extra, como calibración, trayectorias, etc...
 	

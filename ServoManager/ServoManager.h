@@ -31,6 +31,9 @@
  *
  *  ${pub_topic}/cmd/cal S,Ai,Af,Di,Df
  *      Calibra los rangos del servo S, con ángulo minmax Ai,Af y duty minmax Di,Df.
+ *
+ *  ${pub_topic}/cmd/save 0
+ *      Guarda los datos de calibración de todos los servos en NVFlash
  */
  
 #ifndef __ServoManager__H
@@ -42,6 +45,7 @@
 #include "MQLib.h"
 #include "Logger.h"
 #include "PCA9685_ServoDrv.h"
+#include "NVFlash.h"
 
 
    
@@ -96,7 +100,28 @@ class ServoManager : public PCA9685_ServoDrv{
     /** Devuelve el estado del driver
      *  @return Estado del chip
      */
-     bool ready() { return ((PCA9685_ServoDrv::getState() == PCA9685_ServoDrv::Ready)? true : false); }    
+    bool ready() { return ((PCA9685_ServoDrv::getState() == PCA9685_ServoDrv::Ready)? true : false); }    
+    
+  
+	/** getNVDataSize()
+     *  Obtiene el tamaño de los datos NV
+     */
+    uint32_t getNVDataSize(){ return(sizeof(NVData_t)); }
+    
+  
+	/** setNVData()
+     *  Actualiza los datos NVData
+     *  @param data Datos de recuperación
+     *  @return 0 si es correcto, !=0 si los datos son incorrectos o inválidos
+     */
+    int setNVData(void* data);
+    
+  
+	/** getNVData()
+     *  Lee los datos NVData
+     *  @param data Recibe los datos NV de recuperación
+     */
+    void getNVData(uint32_t* data); 
     
     
   protected:
@@ -111,6 +136,15 @@ class ServoManager : public PCA9685_ServoDrv{
         uint16_t *duty;
         uint8_t steps;
         uint32_t step_tick_us;
+    };
+    
+    /** Estructura de datos con los parámetros de calibración */    
+    struct NVData_t{
+        int16_t minAngle[PCA9685_ServoDrv::ServoCount];
+        int16_t maxAngle[PCA9685_ServoDrv::ServoCount];
+        uint16_t minDuty[PCA9685_ServoDrv::ServoCount];
+        uint16_t maxDuty[PCA9685_ServoDrv::ServoCount];
+        uint32_t crc32;
     };
     
     Thread      _th;                    /// Manejador del thread
