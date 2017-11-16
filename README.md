@@ -10,6 +10,11 @@ de los eventos de los drivers en un contexto de tarea (fuera de las ISRs)
 ## Changelog
 
 ----------------------------------------------------------------------------------------------
+##### 16.11.2017 ->commit:"Actualizo TocuhManager"
+- [x] Actualizo TocuhManager tras las pruebas funcionales terminadas.
+	
+
+----------------------------------------------------------------------------------------------
 ##### 16.11.2017 ->commit:"Incluyo ProximityManager"
 - [x] Añado ProximityManager tras las pruebas funcionales terminadas.
 	
