@@ -14,7 +14,7 @@
  *  en cuenta, las órdenes que acepta el módulo son las siguientes:
  *
  *  Suscripción:
- *      $(sub_topic)/cmd/config D,I,O,F,R,Ei,Er
+ *      $(sub_topic)/config D,I,O,F,R,Ei,Er
  *      Permite ajustar los siguientes parámetros:
  *      D: Rango de detección máxima en cm. Por encima de ese valor, no lo tendrá en cuenta.
  *      I: Diferencia en cm entre medidas consecutivas para notificar event de acercamiento.
@@ -25,22 +25,22 @@
  *      Ei:Flag para habilitar o no los eventos de errores durante la captura.
  *      Por ejemplo, para detectar cambios superiores a 10cm al acercarse y 20cm al alejarse, con un filtro de 3 muestras, y 50cm 
  *      como rango para las muestras del filtro,con todos los eventos activos, se publicaría lo siguiente: 
- *                  $(sub_topic)/cmd/dist 10,20,3,50,1,1
+ *                  $(sub_topic)/config 10,20,3,50,1,1
  *
- *      $(sub_topic)/cmd/start T,t
+ *      $(sub_topic)/start T,t
  *      Permite iniciar la captura con una cadencia T(ms) y un timeout de medida de t(ms)
  *
- *      $(sub_topic)/cmd/stop 0
+ *      $(sub_topic)/stop 0
  *      Permite detener la captura
  *
  *  Publicación:
- *      $(sub_topic)/sta/dist E,D
+ *      $(pub_topic)/dist E,D
  *      Permite notificar eventos de estado indicando E(tipo de evento: 0 si se acerca, 1 si se aleja, 2 error en medida) y 
- *      D(distancia en cm), así para notificar que un objeto se aproxima y que está a 20cm se publicará: $(pub_topic)/stat/dist 0,20 
+ *      D(distancia en cm), así para notificar que un objeto se aproxima y que está a 20cm se publicará: $(pub_topic)/dist 0,20 
  *
  *  NOTA: Esta es la configuración para una medida constante con resolución adecuada:
- *  $/cmd/config 100,3,3,3,10,0,1 
- *  $/cmd/start 200,150 
+ *  $.../config 100,3,3,3,10,0,1 
+ *  $.../start 200,150 
  */
  
  

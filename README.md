@@ -10,6 +10,11 @@ de los eventos de los drivers en un contexto de tarea (fuera de las ISRs)
 ## Changelog
 
 ----------------------------------------------------------------------------------------------
+##### 09.01.2018 ->commit:"Actualiza managers de mbed-l432"
+- [x] Actualizo Touch,Proximity y Servo.
+	
+
+----------------------------------------------------------------------------------------------
 ##### 16.11.2017 ->commit:"Actualizo TocuhManager"
 - [x] Actualizo TocuhManager tras las pruebas funcionales terminadas.
 	

@@ -12,27 +12,27 @@
  *
  *  Los topics en los que escucha este módulo son los siguientes: 
  *
- *  ${pub_topic}/cmd/servo S,A
+ *  ${sub_topic}/servo S,A
  *      Mueve el servo S al ángulo A (limitado por rangos min,max)
  *
- *  ${pub_topic}/cmd/duty S,D
+ *  ${sub_topic}/duty S,D
  *      Mueve el servo S al duty D (sin limitación por rango)
  *
- *  ${pub_topic}/cmd/move/start StepTimeUs,NumSteps,ServoOrigin,StepDif,AngIni,AngEnd
+ *  ${sub_topic}/move/start StepTimeUs,NumSteps,ServoOrigin,StepDif,AngIni,AngEnd
  *      Genera un patrón de movimiento senoidal(-1,1,-1) con una cadencia de paso StepTimeUs a completar en NumSteps pasos y 
  *      centrado en el servo ServoOrigin. Los servos adyacentes replican el movimiento variando StepDif pasos del servo
  *      origen.
  *
- *  ${pub_topic}/cmd/move/stop 0
+ *  ${sub_topic}/move/stop 0
  *      Detiene el patrón de movimiento
  *
- *  ${pub_topic}/cmd/info S
+ *  ${sub_topic}/info S
  *      Obtiene información sobre el servo S
  *
- *  ${pub_topic}/cmd/cal S,Ai,Af,Di,Df
+ *  ${sub_topic}/cal S,Ai,Af,Di,Df
  *      Calibra los rangos del servo S, con ángulo minmax Ai,Af y duty minmax Di,Df.
  *
- *  ${pub_topic}/cmd/save 0
+ *  ${sub_topic}/save 0
  *      Guarda los datos de calibración de todos los servos en NVFlash
  */
  
@@ -102,27 +102,6 @@ class ServoManager : public PCA9685_ServoDrv{
      */
     bool ready() { return ((PCA9685_ServoDrv::getState() == PCA9685_ServoDrv::Ready)? true : false); }    
     
-  
-	/** getNVDataSize()
-     *  Obtiene el tamaño de los datos NV
-     */
-    uint32_t getNVDataSize(){ return(sizeof(NVData_t)); }
-    
-  
-	/** setNVData()
-     *  Actualiza los datos NVData
-     *  @param data Datos de recuperación
-     *  @return 0 si es correcto, !=0 si los datos son incorrectos o inválidos
-     */
-    int setNVData(void* data);
-    
-  
-	/** getNVData()
-     *  Lee los datos NVData
-     *  @param data Recibe los datos NV de recuperación
-     */
-    void getNVData(uint32_t* data); 
-    
     
   protected:
       
@@ -137,16 +116,7 @@ class ServoManager : public PCA9685_ServoDrv{
         uint8_t steps;
         uint32_t step_tick_us;
     };
-    
-    /** Estructura de datos con los parámetros de calibración */    
-    struct NVData_t{
-        int16_t minAngle[PCA9685_ServoDrv::ServoCount];
-        int16_t maxAngle[PCA9685_ServoDrv::ServoCount];
-        uint16_t minDuty[PCA9685_ServoDrv::ServoCount];
-        uint16_t maxDuty[PCA9685_ServoDrv::ServoCount];
-        uint32_t crc32;
-    };
-    
+        
     Thread      _th;                    /// Manejador del thread
     uint32_t    _timeout;               /// Manejador de timming en la tarea
     char*       _sub_topic;             /// Topic base para la suscripción

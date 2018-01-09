@@ -12,7 +12,7 @@
 //--- PRIVATE TYPES ------------------------------------------------------------------
 //------------------------------------------------------------------------------------
 
-#define DEBUG_TRACE(format, ...)    if(_debug){_debug->printf(format, ##__VA_ARGS__);}
+#define DEBUG_TRACE(format, ...)    if(_debug){ _debug->printf(format, ##__VA_ARGS__);}
 
  
     
@@ -79,6 +79,7 @@ void ServoManager::stopMovement(){
     }
 }
 
+
 //------------------------------------------------------------------------------------
 void ServoManager::setSubscriptionBase(const char* sub_topic) {
     if(_sub_topic){
@@ -88,57 +89,15 @@ void ServoManager::setSubscriptionBase(const char* sub_topic) {
     
     _sub_topic = (char*)sub_topic; 
  
-    // Se suscribe a $sub_topic/cmd/#
-    char* suscr = (char*)Heap::memAlloc(strlen(sub_topic) + strlen("/cmd/#")+1);
+    // Se suscribe a $sub_topic/#
+    char* suscr = (char*)Heap::memAlloc(strlen(sub_topic) + strlen("/#")+1);
     if(suscr){
-        sprintf(suscr, "%s/cmd/#", _sub_topic);
+        sprintf(suscr, "%s/#", _sub_topic);
         MQ::MQClient::subscribe(suscr, &_subscrCb);
-        DEBUG_TRACE("\r\nServoManager: Suscrito a %s/cmd/#\r\n", sub_topic);
-    }
-     
+        DEBUG_TRACE("\r\nServoManager: Suscrito a %s/#\r\n", sub_topic);
+    }     
 }   
 
-
-//------------------------------------------------------------------------------------
-int ServoManager::setNVData(void* data) {
-    NVData_t* nvdata = (NVData_t*)data;
-    DEBUG_TRACE("\r\nServoManager: Chequeando NVData...");
-    uint32_t crc = 0;
-    for(uint8_t i=0; i<PCA9685_ServoDrv::ServoCount; i++){
-        crc ^= nvdata->minAngle[i];
-        crc ^= nvdata->maxAngle[i];
-        crc ^= nvdata->minDuty[i];
-        crc ^= nvdata->maxDuty[i];
-    }
-    if(crc == nvdata->crc32 && crc != MBED_FLASH_INVALID_SIZE){
-        DEBUG_TRACE("OK!\r\nServoManager: Actualizando NVData...");
-        for(uint8_t i=0; i<PCA9685_ServoDrv::ServoCount; i++){
-            PCA9685_ServoDrv::setServoRanges(i, nvdata->minAngle[i], nvdata->maxAngle[i], nvdata->minDuty[i], nvdata->maxDuty[i]);
-        }    
-        DEBUG_TRACE("OK!\r\n");
-        return 0;
-    }
-    DEBUG_TRACE("ERROR\r\n");
-    return -1;
-}
-
-
-//------------------------------------------------------------------------------------
-void ServoManager::getNVData(uint32_t* data) {    
-    NVData_t* nvdata = (NVData_t*)data;
-    DEBUG_TRACE("\r\nServoManager: Leyendo NVData...");
-    uint32_t crc = 0;
-    for(uint8_t i=0; i<PCA9685_ServoDrv::ServoCount; i++){
-        PCA9685_ServoDrv::getServoRanges(i, &nvdata->minAngle[i], &nvdata->maxAngle[i], &nvdata->minDuty[i], &nvdata->maxDuty[i]);
-        crc ^= nvdata->minAngle[i];
-        crc ^= nvdata->maxAngle[i];
-        crc ^= nvdata->minDuty[i];
-        crc ^= nvdata->maxDuty[i];
-    }  
-    nvdata->crc32 = crc;
-    DEBUG_TRACE("OK!\r\n");
-}    
-    
 //------------------------------------------------------------------------------------
 //- PROTECTED CLASS IMPL. ------------------------------------------------------------
 //------------------------------------------------------------------------------------
@@ -179,17 +138,17 @@ void ServoManager::onTickCb(){
 
 
 //------------------------------------------------------------------------------------
-void ServoManager::subscriptionCb(const char* name, void* msg, uint16_t msg_len){
+void ServoManager::subscriptionCb(const char* topic, void* msg, uint16_t msg_len){
     // si es un comando para detener un movimiento repetitivo tipo respiración...
-    if(strstr(name, "/cmd/move/stop") != 0){
+    if(MQ::MQClient::isTopicToken(topic, "/move/stop")){
         DEBUG_TRACE("\r\nServoManager: Movimiento terminado!\r\n");
         stopMovement();
         return;
     }
     
     // si es un comando para iniciar un movimiento repetitivo tipo respiración...
-    if(strstr(name, "/cmd/move/start") != 0){
-        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", name, msg);
+    if(MQ::MQClient::isTopicToken(topic, "/move/start")){
+        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", topic, msg);
         // obtengo los parámetros del mensaje Tstep y Tmax
         char* data = (char*)Heap::memAlloc(msg_len);
         if(data){
@@ -225,8 +184,8 @@ void ServoManager::subscriptionCb(const char* name, void* msg, uint16_t msg_len)
     }
 
     // si es un comando para mover un único servo
-    if(strstr(name, "/cmd/servo") != 0){
-        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", name, msg);
+    if(MQ::MQClient::isTopicToken(topic, "/servo")){
+        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", topic, msg);
         // obtengo los parámetros del mensaje ServoID,Deg
         char* data = (char*)Heap::memAlloc(msg_len);
         if(data){
@@ -244,8 +203,8 @@ void ServoManager::subscriptionCb(const char* name, void* msg, uint16_t msg_len)
     }    
 
     // si es un comando para mover un único servo
-    if(strstr(name, "/cmd/duty") != 0){
-        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", name, msg);
+    if(MQ::MQClient::isTopicToken(topic, "/duty")){
+        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", topic, msg);
         // obtengo los parámetros del mensaje ServoID,Duty
         char* data = (char*)Heap::memAlloc(msg_len);
         if(data){
@@ -263,8 +222,8 @@ void ServoManager::subscriptionCb(const char* name, void* msg, uint16_t msg_len)
     }  
 
     // si es un comando para mover un único servo
-    if(strstr(name, "/cmd/info") != 0){
-        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", name, msg);
+    if(MQ::MQClient::isTopicToken(topic, "/info")){
+        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", topic, msg);
         // obtengo los parámetros del mensaje ServoID,Duty
         char* data = (char*)Heap::memAlloc(msg_len);
         if(data){
@@ -285,8 +244,8 @@ void ServoManager::subscriptionCb(const char* name, void* msg, uint16_t msg_len)
     }            
 
     // si es un comando para leer el duty del servo del chip i2c
-    if(strstr(name, "/cmd/read") != 0){
-        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", name, msg);
+    if(MQ::MQClient::isTopicToken(topic, "/read")){
+        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", topic, msg);
         // obtengo los parámetros del mensaje ServoID,Duty
         char* data = (char*)Heap::memAlloc(msg_len);
         if(data){
@@ -309,8 +268,8 @@ void ServoManager::subscriptionCb(const char* name, void* msg, uint16_t msg_len)
     }              
 
     // si es un comando para calibrar el servo
-    if(strstr(name, "/cmd/cal") != 0){
-        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", name, msg);
+    if(MQ::MQClient::isTopicToken(topic, "/cal")){
+        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", topic, msg);
         // obtengo los parámetros del mensaje ServoID,Duty
         char* data = (char*)Heap::memAlloc(msg_len);
         if(data){
@@ -334,13 +293,13 @@ void ServoManager::subscriptionCb(const char* name, void* msg, uint16_t msg_len)
     }                  
 
     // si es un comando para guardar la calibración de los servos
-    if(strstr(name, "/cmd/save") != 0){
-        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", name, msg);
+    if(MQ::MQClient::isTopicToken(topic, "/save")){
+        DEBUG_TRACE("\r\nServoManager: Topic:%s msg:%s\r\n", topic, msg);
         // obtengo los datos de calibración y los actualizo
         uint32_t* caldata = (uint32_t*)Heap::memAlloc(NVFlash::getPageSize());
         if(caldata){
             NVFlash::readPage(0, caldata);
-            getNVData(caldata);
+            PCA9685_ServoDrv::getNVData(caldata);
             NVFlash::erasePage(0);
             if(NVFlash::writePage(0, caldata) == NVFlash::Success){
                 DEBUG_TRACE("\r\nGuardados datos de calibración\r\n");               

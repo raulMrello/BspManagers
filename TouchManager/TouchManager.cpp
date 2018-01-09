@@ -12,7 +12,7 @@
 //--- PRIVATE TYPES ------------------------------------------------------------------
 //------------------------------------------------------------------------------------
 
-#define DEBUG_TRACE(format, ...)    if(_debug){_debug->printf(format, ##__VA_ARGS__);}
+#define DEBUG_TRACE(format, ...)    if(_debug){ _debug->printf(format, ##__VA_ARGS__);}
 
 static void defaultCb(TouchManager::TouchMsg* msg){
 }
@@ -98,9 +98,11 @@ void TouchManager::setPublicationBase(const char* pub_topic) {
 
 //------------------------------------------------------------------------------------
 void TouchManager::task(){
-    
-    _ready = true;
+    while(MPR121_CapTouch::getState() != MPR121_CapTouch::Ready){
+        Thread::yield();
+    }
     _curr_sns = MPR121_CapTouch::touched();
+    _ready = true;
     
     // Arranca espera
     _timeout = osWaitForever;

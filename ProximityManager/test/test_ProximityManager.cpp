@@ -11,7 +11,7 @@
 
 
 /** Macro de impresión de trazas de depuración */
-#define DEBUG_TRACE(format, ...)    if(logger){Thread::wait(2); logger->printf(format, ##__VA_ARGS__);}
+#define DEBUG_TRACE(format, ...)    if(logger){logger->printf(format, ##__VA_ARGS__);}
 
 
 // **************************************************************************
@@ -20,8 +20,8 @@
 
 /** Canal de comunicación remota */
 static MQSerialBridge* qserial;
-/** Canal de depuración */
 static Logger* logger;
+
 /** Driver control detector */
 static ProximityManager* distdrv;
 
@@ -46,11 +46,7 @@ void test_ProximityManager(){
     //  - Pines USBTX, USBRX a 115200bps y 256 bytes para buffers
     //  - Configurado por defecto en modo texto
     qserial = new MQSerialBridge(USBTX, USBRX, 115200, 256);
-    
-
-    // --------------------------------------
-    // Inicia el canal de depuración (compartiendo salida remota)
-    logger = (Logger*)qserial;    
+    logger = (Logger*)qserial;
     DEBUG_TRACE("\r\nIniciando test_ProximityManager...\r\n");
 
 
@@ -69,8 +65,8 @@ void test_ProximityManager(){
     distdrv->config(10, 10, 3);
     
     // establezco topic base 'prox'
-    distdrv->setPublicationBase("prox");
-    distdrv->setSubscriptionBase("prox");
+    distdrv->setPublicationBase("prox/sta");
+    distdrv->setSubscriptionBase("prox/cmd");
     
     DEBUG_TRACE("\r\nSuscripción a prox/sta/# ...");
     MQ::MQClient::subscribe("prox/sta/#", new MQ::SubscribeCallback(&distEvtSubscription));
